@@ -1,5 +1,6 @@
 #include "../../include/core/CPU.hpp"
 #include <cstdint>
+#include <iostream>
 #include <stdexcept>
 
 void CPU::Reset() {
@@ -29,4 +30,18 @@ void CPU::Cycle() {
     Decoder::DecodeAndExecute(*this, opcode);
     if(delayTimer>0) delayTimer--;
     if(soundTimer>0) soundTimer--;
+    if(opcode == 0x1228){
+        auto buff=display->GetBuffer();
+        for(int i=0;i<64*32;i++){
+            if(i%64==0){
+                std::cout<<std::endl;
+            }
+            if(buff[i]){
+                std::cout<<"█";
+            }else{
+                std::cout<<" ";
+            }
+        }
+        std::cout<<std::endl;
+    }
 };

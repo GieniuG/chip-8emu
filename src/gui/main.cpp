@@ -13,11 +13,14 @@ int main() {
         std::cout << "ROM wczytany poprawnie!\n";
 
         // 3. Pętla testowa: wykonujemy 5 cykli procesora
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 21; ++i) {
             emu.Tick(); // Ta metoda wewnątrz wywołuje cpu->Cycle()
         }
         
         std::cout << "Testowe cykle zakonczone sukcesem. Maszyna zyje.\n";
+        for(int i=0;i<64*32;i++){
+
+        }
 
     } catch (const std::exception& e) {
         // Jeśli pliku nie ma, lub jest za duży, ten kod elegancko wypisze Twój wyjątek
