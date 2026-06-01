@@ -13,7 +13,6 @@ App::App()
     : window(sf::VideoMode({640, 320}), "chip8"), sprite(texture), emulator(),
       texture() {
           
-    emulator.LoadROM("/home/gieniu/Uni/jipp/chip-8emu/roms/IBM Logo.ch8");
   if (!texture.create(64, 32)) {
     std::runtime_error("Could not create screen texture");
   };
@@ -34,6 +33,7 @@ App::App()
 }
 
 void App::Run() {
+  emulator.LoadROM("roms/IBM Logo.ch8");
   window.setFramerateLimit(60);
   while (window.isOpen()) {
     sf::Event event;
