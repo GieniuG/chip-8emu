@@ -1,7 +1,5 @@
 #include "../../include/core/CPU.hpp"
 #include <cstdint>
-#include <iostream>
-#include <stdexcept>
 
 void CPU::Reset() {
   registers.fill(0);
