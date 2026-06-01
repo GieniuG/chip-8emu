@@ -11,7 +11,8 @@ class CPU : public IResettable {
 public:
   void Reset() override;
   CPU(Memory *memory, Keypad *keypad, Display *display);
-
+  
+  void UpdateTimers();
   void Cycle();
 
 private:

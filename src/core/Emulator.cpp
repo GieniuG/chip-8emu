@@ -47,4 +47,3 @@ void Emulator::Tick(){
 
 const Display &Emulator::GetDisplay() const { return *display; }
 Keypad Emulator::GetKeypad() { return *keypad; }
-

@@ -17,5 +17,12 @@ add_library(chip8core SHARED
     src/core/Emulator.cpp
 )
 
-add_executable(chip8 src/gui/main.cpp)
-target_link_libraries(chip8 PRIVATE chip8core)
+find_package(SFML 3 COMPONENTS Graphics Window System REQUIRED)
+
+add_executable(chip8 src/gui/main.cpp src/gui/App.cpp)
+target_link_libraries(chip8 PRIVATE 
+    chip8core
+    SFML::Graphics 
+    SFML::Window 
+    SFML::System
+)
