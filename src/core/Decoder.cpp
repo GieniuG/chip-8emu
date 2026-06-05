@@ -19,9 +19,11 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
   case 0x0000:
     switch (nn) {
     case 0xE0:
+      //clear screen
       cpu.display->Reset();
       break;
     case 0xEE:
+      //return from subroutine
       cpu.PC=cpu.stack[cpu.SP-1];
       cpu.stack[cpu.SP]=0;
       if(cpu.SP>0)
@@ -32,33 +34,41 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
     }
     break;
   case 0x1000:
+    //jump
     cpu.PC=nnn;
     break;
   case 0x2000:
+    //call subroutine 
     cpu.stack[cpu.SP]=cpu.PC;
     if(cpu.SP<16)
         cpu.SP++;
     cpu.PC=nnn;
     break;
   case 0x3000:
+    //skip conditionally
     if(vx==nn)
         cpu.PC+=2;
     break;
   case 0x4000:
+    //skip conditionally
     if(vx!=nn)
         cpu.PC+=2;
     break;
   case 0x5000:
+    //skip conditionally
     if(vx==vy)
         cpu.PC+=2;
     break;
   case 0x6000:
+    //set register vx
     cpu.registers[x] = nn;
     break;
   case 0x7000:
+    //add value to vx
     cpu.registers[x]+=nn;
     break;
   case 0x8000:
+    //logical and arithmetic instructions
     switch(n){
       case 0x0:
         cpu.registers[x]=vy;
@@ -103,19 +113,24 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
     }
     break;
   case 0x9000:
+    //skip conditionally
     if(vx!=vy)
         cpu.PC+=2;
     break;
   case 0xA000:
+    //set index register 
     cpu.I = nnn;
     break;
   case 0xB000:
+    //jump with offset
     cpu.PC=nnn+cpu.registers[0];
     break;
   case 0xC000:
+    //random
     cpu.registers[x]=(rand()%255)&nn;
     break;
   case 0xD000:
+    //display/draw
     cpu.registers[0xF]=0;
     for(int row=0;row<n;row++){
         uint8_t line = cpu.memory->ReadByte(cpu.I+row);
@@ -136,6 +151,7 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
         }
     }
     break;
+
   default:
     std::cout << "I have no idea... lol" << std::endl;
   }
