@@ -14,6 +14,7 @@ public:
   
   void UpdateTimers();
   void Cycle();
+  uint8_t GetSoundTimer();
 
 private:
   std::array<uint8_t, 16> registers;

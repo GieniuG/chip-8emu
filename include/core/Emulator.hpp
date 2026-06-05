@@ -12,7 +12,9 @@ public:
   void Tick();
 
   const Display &GetDisplay() const;
-  Keypad GetKeypad();
+  Keypad* GetKeypad();
+  void UpdateTimers();
+  bool isBeeping();
 private:
   std::unique_ptr<CPU> cpu;
   std::unique_ptr<Memory> memory;

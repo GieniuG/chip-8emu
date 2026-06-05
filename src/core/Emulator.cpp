@@ -41,9 +41,16 @@ void Emulator::Reset(){
   display->Reset();
   decoder->DecodeAndExecute(*cpu, 0x200);
 };
-void Emulator::Tick(){
+    void Emulator::Tick(){
   cpu->Cycle();
 };
 
 const Display &Emulator::GetDisplay() const { return *display; }
-Keypad Emulator::GetKeypad() { return *keypad; }
+Keypad* Emulator::GetKeypad() { return keypad.get(); }
+
+void Emulator::UpdateTimers(){
+    cpu->UpdateTimers();
+}
+bool Emulator::isBeeping(){
+    return cpu->GetSoundTimer() > 0;
+}
