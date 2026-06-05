@@ -17,7 +17,7 @@ add_library(chip8core SHARED
     src/core/Emulator.cpp
 )
 
-find_package(SFML 2 COMPONENTS graphics window system REQUIRED)
+find_package(SFML 2 COMPONENTS audio graphics window system REQUIRED)
 
 add_executable(chip8 src/gui/main.cpp src/gui/App.cpp)
 target_link_libraries(chip8 PRIVATE 
@@ -25,4 +25,5 @@ target_link_libraries(chip8 PRIVATE
     sfml-graphics 
     sfml-window 
     sfml-system
+    sfml-audio
 )
