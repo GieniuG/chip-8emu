@@ -1,6 +1,6 @@
 #include "App.hpp"
-#include "../../include/core/RomLoader.hpp"
 #include "../../include/core/AudioBeeper.hpp"
+#include "../../include/core/RomLoader.hpp"
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Image.hpp>
@@ -10,36 +10,38 @@
 #include <SFML/Window.hpp>
 #include <SFML/Window/VideoMode.hpp>
 #include <cstdint>
-#include <stdexcept>
+#include <filesystem>
+#include <imgui-SFML.h>
+#include <imgui.h>
 #include <iostream>
+#include <stdexcept>
 #include <unordered_map>
 
-App::App()
-    : window(sf::VideoMode({640, 320}), "chip8"), sprite(texture), emulator(),
-      texture() {
+enum class EmulatorState { Running, Paused, Menu };
+EmulatorState currentState = EmulatorState::Menu;
+
+App::App() : window(), sprite(texture), emulator(), texture() {
 
   if (!texture.create(64, 32)) {
     throw std::runtime_error("Could not create screen texture");
   };
   sprite.setTexture(texture, true);
-  sprite.setScale({10.f, 10.f});
 }
 
-bool App::LoadRom(const std::string& path){
-  try{
-      RomLoader loader;
-      auto romData = loader.Load(path);
-      emulator.Reset();
-      emulator.LoadROM(romData);
-  }catch(const std::exception& e){
-      std::cerr << "Błąd krytyczny: " << e.what() << std::endl;
-      return false;
+bool App::LoadRom(const std::string &path) {
+  try {
+    RomLoader loader;
+    auto romData = loader.Load(path);
+    emulator.Reset();
+    emulator.LoadROM(romData);
+  } catch (const std::exception &e) {
+    std::cerr << "Błąd krytyczny: " << e.what() << std::endl;
+    return false;
   }
   return true;
 }
 
 void App::Run() {
-    bool pause=false;
   std::unordered_map<sf::Keyboard::Scancode, uint8_t> keyMap = {
       {sf::Keyboard::Scan::Num1, 0x1}, {sf::Keyboard::Scan::Num2, 0x2},
       {sf::Keyboard::Scan::Num3, 0x3}, {sf::Keyboard::Scan::Num4, 0xc},
@@ -51,18 +53,28 @@ void App::Run() {
       {sf::Keyboard::Scan::C, 0xb},    {sf::Keyboard::Scan::V, 0xf},
   };
 
+  std::string errorMessage = "";
 
   Keypad *keypad = emulator.GetKeypad();
-  window.setFramerateLimit(60);
 
   sf::Image screenImage;
   screenImage.create(64, 32, sf::Color::Black);
-    
+
   AudioBeeper beeper;
+
+  window.create(sf::VideoMode(1024, 512), "chip8");
+  window.setFramerateLimit(60);
+  sf::View initialView(sf::FloatRect(0, 0, 64, 32));
+  window.setView(initialView);
+
+  ImGui::SFML::Init(window);
+  sf::Clock deltaClock;
 
   while (window.isOpen()) {
     sf::Event event;
     while (window.pollEvent(event)) {
+      ImGui::SFML::ProcessEvent(window, event);
+
       if (event.type == sf::Event::Closed)
         window.close();
       if (event.type == sf::Event::KeyPressed ||
@@ -74,35 +86,68 @@ void App::Run() {
           if (state != keypad->IsKeyPressed(key)) {
             keypad->SetKey(key, state);
           }
-        }else{
-            if(event.type == sf::Event::KeyPressed){
-                switch(event.key.scancode){
-                    case sf::Keyboard::Scan::P:
-                        pause=pause^1;
-                    case sf::Keyboard::Scan::O:
-                        LoadRom("../roms/IBM Logo.ch8");
-                }
-                
+        } else {
+          if (event.type == sf::Event::KeyPressed) {
+            switch (event.key.scancode) {
+            case sf::Keyboard::P:
+              if (currentState != EmulatorState::Menu) {
+                currentState = (currentState == EmulatorState::Paused)
+                                   ? EmulatorState::Running
+                                   : EmulatorState::Paused;
+              }
+            case sf::Keyboard::Scan::Escape:
+              currentState = (currentState == EmulatorState::Menu)
+                                 ? EmulatorState::Running
+                                 : EmulatorState::Menu;
             }
+          }
         }
       }
+      if (event.type == sf::Event::Resized) {
+        float viewRatio = 64.f / 32.f;
+        float windowRatio = static_cast<float>(event.size.width) /
+                            static_cast<float>(event.size.height);
+
+        float sizeX = 1.0f;
+        float sizeY = 1.0f;
+        float posX = 0.0f;
+        float posY = 0.0f;
+
+        if (windowRatio < viewRatio) {
+          sizeX = viewRatio / windowRatio;
+          posX = (1.0f - sizeX) / 2.0f;
+        } else {
+          sizeY = windowRatio / viewRatio;
+          posY = (1.0f - sizeY) / 2.0f;
+        }
+
+        sf::View view(sf::FloatRect(0, 0, 64, 32));
+        view.setViewport(sf::FloatRect(posX, posY, sizeX, sizeY));
+        window.setView(view);
+      }
     }
-    if(!pause){
+    if (currentState == EmulatorState::Running) {
+      try {
         for (int i = 0; i < 10; i++)
           emulator.Tick();
         emulator.UpdateTimers();
-    }
-    window.clear();
-
-    if (emulator.isBeeping()) {
-      if(!beeper.isPlaying()) {
-          beeper.play();
+        if (emulator.isBeeping()) {
+          if (!beeper.isPlaying()) {
+            beeper.play();
+          }
+        } else {
+          if (beeper.isPlaying()) {
+            beeper.stop();
+          }
+        }
+      } catch (const std::exception &e) {
+        errorMessage = e.what();
+        currentState = EmulatorState::Menu;
       }
     } else {
-      if (beeper.isPlaying()) {
-        beeper.stop();
-      }
+      beeper.stop();
     }
+
     auto buff = emulator.GetDisplay().GetBuffer();
     for (int y = 0; y < 32; ++y) {
       for (int x = 0; x < 64; ++x) {
@@ -114,8 +159,44 @@ void App::Run() {
       }
     }
 
+    ImGui::SFML::Update(window, deltaClock.restart());
+    if (currentState == EmulatorState::Menu) {
+      ImGui::Begin("CHIP-8 ROM Loader");
+      ImGui::Text("Wybierz plik z grami:");
+      ImGui::Separator();
+
+      try {
+        for (const auto &entry : std::filesystem::directory_iterator("roms")) {
+          if (entry.is_regular_file() && entry.path().extension() == ".ch8") {
+
+            std::string filename = entry.path().filename().string();
+            std::string fullPath = entry.path().string();
+
+            if (ImGui::Button(filename.c_str())) {
+              LoadRom(fullPath);
+              currentState = EmulatorState::Running;
+            }
+          }
+        }
+      } catch (const std::filesystem::filesystem_error &e) {
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
+                           "Brak folderu roms w katalogu programu");
+      }
+      if (!errorMessage.empty()) {
+        ImGui::Separator();
+        ImGui::TextColored(ImVec4(1.0f, 2.0f, 0.2f, 1.0f), "EMULATOR CRASH:");
+        ImGui::TextWrapped("%s", errorMessage.c_str());
+      }
+
+      ImGui::End();
+    }
+
+    window.clear(sf::Color::Black);
+
     texture.update(screenImage);
     window.draw(sprite);
+    ImGui::SFML::Render(window);
     window.display();
   }
+  ImGui::SFML::Shutdown();
 };

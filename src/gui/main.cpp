@@ -6,7 +6,7 @@
 int main(int argc, char** argv) {
     App app;
 
-    if(argc > 1){
+    if(argc > 0){
         std::string romPath = argv[1];
         app.LoadRom(romPath);
     }

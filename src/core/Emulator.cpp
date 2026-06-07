@@ -26,7 +26,6 @@ void Emulator::Reset(){
   memory->Reset();
   keypad->Reset();
   display->Reset();
-  decoder->DecodeAndExecute(*cpu, 0x200);
 };
     void Emulator::Tick(){
   cpu->Cycle();

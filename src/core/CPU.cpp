@@ -1,5 +1,6 @@
 #include "../../include/core/CPU.hpp"
 #include <cstdint>
+#include <iostream>
 
 void CPU::Reset() {
   registers.fill(0);
@@ -39,6 +40,7 @@ CPU::CPU(Memory *memory, Keypad *keypad, Display *display){
     for(int i=0;i<80;i++){
         this->memory->WriteByte(font[i],i);
     }
+    PC=0x200;
 
 };
 

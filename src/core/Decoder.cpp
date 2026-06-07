@@ -1,12 +1,10 @@
 #include "../../include/core/Decoder.hpp"
 #include "../../include/core/CPU.hpp"
 #include <cstdint>
-#include <ios>
 #include <iostream>
 #include <stdexcept>
 
 void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
-  //std::cout << "opcode: " << std::hex << opcode << std::endl;
   uint16_t nnn = opcode & 0x0FFF;
   uint8_t nn = opcode & 0x00FF;
   uint8_t n = opcode & 0x000F;
@@ -27,8 +25,7 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
       cpu.PC = cpu.stack[cpu.SP];
       break;
     default:
-      std::cout << std::hex << opcode << std::endl;
-      std::runtime_error("Opcode not recognized");
+        ThrowUnknownOpcode(cpu.PC,opcode);
     }
     break;
   case 0x1000:
@@ -104,8 +101,7 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
       cpu.registers[0xf] = (vx & 0x80)>>7;
       break;
     default:
-      std::cout << std::hex << opcode << std::endl;
-      std::runtime_error("Opcode not recognized");
+        ThrowUnknownOpcode(cpu.PC,opcode);
     }
     break;
   case 0x9000:
@@ -160,19 +156,21 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
       }
       break;
     default:
-      std::cout << std::hex << opcode << std::endl;
-      std::runtime_error("Opcode not recognized");
+        ThrowUnknownOpcode(cpu.PC,opcode);
     }
     break;
   case 0xF000:
     switch (nn) {
     case 0x07:
+        //set vx to timer
         cpu.registers[x]=cpu.delayTimer;
         break;
     case 0x15:
+        //set timer to vx
         cpu.delayTimer = vx;
         break;
     case 0x18:
+        //set sound timer to vx
         cpu.soundTimer = vx;
         break;
     case 0x1E:
@@ -225,12 +223,17 @@ void Decoder::DecodeAndExecute(CPU &cpu, uint16_t opcode) {
       }
       break;
     default:
-      std::cout << std::hex << opcode << std::endl;
-      std::runtime_error("Opcode not recognized");
+        ThrowUnknownOpcode(cpu.PC,opcode);
     }
     break;
 
   default:
-    std::cout << "I have no idea... lol" << std::endl;
+    ThrowUnknownOpcode(cpu.PC,opcode);
   }
+}
+
+void Decoder::ThrowUnknownOpcode(uint8_t PC, uint16_t opcode){
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "Unknown opcode: 0x%04X pod adresem 0x%04X", opcode,(uint16_t)(PC-2));
+    throw std::runtime_error(buffer);
 }
