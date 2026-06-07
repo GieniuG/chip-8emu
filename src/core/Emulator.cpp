@@ -15,24 +15,11 @@ Emulator::Emulator() {
   Reset();
 }
 
-void Emulator::LoadROM(std::string romPath) {
-  std::ifstream file(romPath,std::ios::binary | std::ios::ate);
-  if (!file.is_open()) {
-    throw std::runtime_error("Could not open file: "+romPath);
-  }
-  auto size = file.tellg();
-  if(size>3584){
-    throw std::runtime_error("File too big: "+romPath);
-  }
-  file.seekg(0,std::ios::beg);
-  std::vector<char> buffer(size);
-
-  file.read(buffer.data(),size);
-  for(int i=0;i<size;i++){
-    memory->WriteByte(0x200+i,static_cast<uint8_t>(buffer[i]));
+void Emulator::LoadROM(std::vector<char> romData) {
+  for(int i=0;i<romData.size();i++){
+    memory->WriteByte(0x200+i,static_cast<uint8_t>(romData[i]));
   }
 
-  file.close();
 };
 void Emulator::Reset(){
   cpu->Reset();

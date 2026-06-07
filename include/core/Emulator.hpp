@@ -2,12 +2,13 @@
 #include "CPU.hpp"
 #include "Decoder.hpp"
 #include <memory>
+#include <vector>
 
 
 class Emulator {
 public:
   Emulator();
-  void LoadROM(std::string romPath);
+  void LoadROM(std::vector<char> romPath);
   void Reset();
   void Tick();
 

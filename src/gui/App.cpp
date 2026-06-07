@@ -1,5 +1,6 @@
 #include "App.hpp"
-#include <SFML/Audio.hpp>
+#include "../../include/core/RomLoader.hpp"
+#include "../../include/core/AudioBeeper.hpp"
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Image.hpp>
@@ -8,9 +9,9 @@
 #include <SFML/System.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Window/VideoMode.hpp>
-#include <cmath>
 #include <cstdint>
 #include <stdexcept>
+#include <iostream>
 #include <unordered_map>
 
 App::App()
@@ -18,22 +19,23 @@ App::App()
       texture() {
 
   if (!texture.create(64, 32)) {
-    std::runtime_error("Could not create screen texture");
+    throw std::runtime_error("Could not create screen texture");
   };
   sprite.setTexture(texture, true);
   sprite.setScale({10.f, 10.f});
-  auto buff = emulator.GetDisplay().GetBuffer();
-  for (int i = 0; i < 2048; i++) {
-    if (buff[i]) {
-      for (int j = 0; j < 4; j++) {
-        sfmlBuffer[i * 4 + j] = 255;
-      }
-    } else {
-      for (int j = 0; j < 4; j++) {
-        sfmlBuffer[i * 4 + j] = j == 3 ? 255 : 0;
-      }
-    }
+}
+
+bool App::LoadRom(const std::string& path){
+  try{
+      RomLoader loader;
+      auto romData = loader.Load(path);
+      emulator.Reset();
+      emulator.LoadROM(romData);
+  }catch(const std::exception& e){
+      std::cerr << "Błąd krytyczny: " << e.what() << std::endl;
+      return false;
   }
+  return true;
 }
 
 void App::Run() {
@@ -48,42 +50,15 @@ void App::Run() {
       {sf::Keyboard::Scan::Z, 0xa},    {sf::Keyboard::Scan::X, 0x0},
       {sf::Keyboard::Scan::C, 0xb},    {sf::Keyboard::Scan::V, 0xf},
   };
-  // emulator.LoadROM("../roms/2-ibm-logo.ch8");
-  // emulator.LoadROM("../roms/3-corax+.ch8");
-  // emulator.LoadROM("../roms/4-flags.ch8");
-  //emulator.LoadROM("../roms/5-quirks.ch8");
-  // emulator.LoadROM("../roms/6-keypad.ch8");
-  //emulator.LoadROM("../roms/7-beep.ch8");
-  emulator.LoadROM("../roms/Wall [David Winter].ch8");
+
+
   Keypad *keypad = emulator.GetKeypad();
   window.setFramerateLimit(60);
 
   sf::Image screenImage;
   screenImage.create(64, 32, sf::Color::Black);
-
-  // BEEP GEN
-  const unsigned SAMPLE_RATE = 44100;
-  const int16_t AMPLITUDE = 10000;
-  const double FREQUENCY = 440.0;
-
-  std::vector<int16_t> samples(SAMPLE_RATE);
-
-  double samplesPerWave = SAMPLE_RATE / FREQUENCY;
-  double halfWave = samplesPerWave / 2.0;
-
-  for (unsigned i = 0; i < SAMPLE_RATE; ++i) {
-    if (std::fmod(i, samplesPerWave) < halfWave) {
-      samples[i] = AMPLITUDE;
-    } else {
-      samples[i] = -AMPLITUDE;
-    }
-  }
-  sf::SoundBuffer beepBuffer;
-  beepBuffer.loadFromSamples(samples.data(), samples.size(), 1, SAMPLE_RATE);
-
-  sf::Sound beepSound;
-  beepSound.setBuffer(beepBuffer);
-  beepSound.setLoop(true);
+    
+  AudioBeeper beeper;
 
   while (window.isOpen()) {
     sf::Event event;
@@ -100,8 +75,13 @@ void App::Run() {
             keypad->SetKey(key, state);
           }
         }else{
-            if(event.type == sf::Event::KeyPressed && event.key.scancode==sf::Keyboard::Scan::P){
-                pause=pause^1;
+            if(event.type == sf::Event::KeyPressed){
+                switch(event.key.scancode){
+                    case sf::Keyboard::Scan::P:
+                        pause=pause^1;
+                    case sf::Keyboard::Scan::O:
+                        LoadRom("../roms/IBM Logo.ch8");
+                }
                 
             }
         }
@@ -115,12 +95,12 @@ void App::Run() {
     window.clear();
 
     if (emulator.isBeeping()) {
-      if (beepSound.getStatus() != sf::Sound::Playing) {
-        beepSound.play();
+      if(!beeper.isPlaying()) {
+          beeper.play();
       }
     } else {
-      if (beepSound.getStatus() == sf::Sound::Playing) {
-        beepSound.stop();
+      if (beeper.isPlaying()) {
+        beeper.stop();
       }
     }
     auto buff = emulator.GetDisplay().GetBuffer();

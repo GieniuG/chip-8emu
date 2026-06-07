@@ -7,6 +7,7 @@
 class App{
     public:
         App();
+        bool LoadRom(const std::string& path);
         void Run();
     private:
         sf::RenderWindow window;
