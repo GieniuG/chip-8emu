@@ -18,10 +18,9 @@
 #include <unordered_map>
 
 enum class EmulatorState { Running, Paused, Menu };
-EmulatorState currentState = EmulatorState::Menu;
-
 App::App() : window(), sprite(texture), emulator(), texture() {
 
+  currentState = EmulatorState::Menu;
   if (!texture.create(64, 32)) {
     throw std::runtime_error("Could not create screen texture");
   };
@@ -38,8 +37,10 @@ bool App::LoadRom(const std::string &path) {
     std::cerr << "Błąd krytyczny: " << e.what() << std::endl;
     return false;
   }
+  currentState = EmulatorState::Running;
   return true;
 }
+void App::setRootPath(const std::string &path) { rootPath = path; }
 
 void App::Run() {
   std::unordered_map<sf::Keyboard::Scancode, uint8_t> keyMap = {
@@ -166,7 +167,8 @@ void App::Run() {
       ImGui::Separator();
 
       try {
-        for (const auto &entry : std::filesystem::directory_iterator("roms")) {
+        for (const auto &entry :
+             std::filesystem::directory_iterator(rootPath)) {
           if (entry.is_regular_file() && entry.path().extension() == ".ch8") {
 
             std::string filename = entry.path().filename().string();
@@ -179,8 +181,10 @@ void App::Run() {
           }
         }
       } catch (const std::filesystem::filesystem_error &e) {
-        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
-                           "Brak folderu roms w katalogu programu");
+        char errBuffer[256];
+        snprintf(errBuffer, sizeof(errBuffer), "No path found: %s",
+                 rootPath.c_str());
+        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), errBuffer);
       }
       if (!errorMessage.empty()) {
         ImGui::Separator();

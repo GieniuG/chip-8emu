@@ -3,16 +3,20 @@
 #include <SFML/System.hpp>
 #include "../../include/core/Emulator.hpp"
 
+enum class EmulatorState;
 
 class App{
     public:
         App();
         bool LoadRom(const std::string& path);
         void Run();
+        void setRootPath(const std::string& path);
     private:
         sf::RenderWindow window;
         sf::Texture texture;
         sf::Sprite sprite;
         Emulator emulator;
         std::array<uint8_t, 64*32*4> sfmlBuffer;
+        std::string rootPath;
+        EmulatorState currentState;
 };
