@@ -105,19 +105,22 @@ void App::Run() {
         }
       }
       if (event.type == sf::Event::Resized) {
-        float viewRatio = 64.f / 32.f;
         float windowRatio = static_cast<float>(event.size.width) /
                             static_cast<float>(event.size.height);
+        float viewRatio = 64.0f / 32.0f; // 2.0
 
         float sizeX = 1.0f;
         float sizeY = 1.0f;
         float posX = 0.0f;
         float posY = 0.0f;
 
-        if (windowRatio < viewRatio) {
+        // TUTAJ BYŁ BŁĄD. Poprawna logika:
+        if (windowRatio >= viewRatio) {
+          // Okno jest szersze niż 2:1 (np. proporcje kinowe) -> Pasy po bokach
           sizeX = viewRatio / windowRatio;
           posX = (1.0f - sizeX) / 2.0f;
         } else {
+          // Okno jest wyższe niż 2:1 (np. 16:9 lub 4:3) -> Pasy na górze i dole
           sizeY = windowRatio / viewRatio;
           posY = (1.0f - sizeY) / 2.0f;
         }
