@@ -2,17 +2,20 @@
 #include "CPU.hpp"
 #include "Decoder.hpp"
 #include <memory>
+#include <vector>
 
 
 class Emulator {
 public:
   Emulator();
-  void LoadROM(std::string romPath);
+  void LoadROM(std::vector<char> romPath);
   void Reset();
   void Tick();
 
   const Display &GetDisplay() const;
-  Keypad GetKeypad();
+  Keypad* GetKeypad();
+  void UpdateTimers();
+  bool isBeeping();
 private:
   std::unique_ptr<CPU> cpu;
   std::unique_ptr<Memory> memory;

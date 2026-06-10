@@ -11,8 +11,10 @@ class CPU : public IResettable {
 public:
   void Reset() override;
   CPU(Memory *memory, Keypad *keypad, Display *display);
-
+  
+  void UpdateTimers();
   void Cycle();
+  uint8_t GetSoundTimer();
 
 private:
   std::array<uint8_t, 16> registers;

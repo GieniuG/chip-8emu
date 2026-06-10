@@ -1,7 +1,6 @@
 #include "../../include/core/CPU.hpp"
 #include <cstdint>
 #include <iostream>
-#include <stdexcept>
 
 void CPU::Reset() {
   registers.fill(0);
@@ -18,6 +17,31 @@ CPU::CPU(Memory *memory, Keypad *keypad, Display *display){
     this->memory = memory;
     this->keypad = keypad;
     this->display = display;
+
+
+    std::array<uint16_t,80> font = {
+0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+0x20, 0x60, 0x20, 0x20, 0x70, // 1
+0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+          };
+    for(int i=0;i<80;i++){
+        this->memory->WriteByte(font[i],i);
+    }
+    PC=0x200;
+
 };
 
 void CPU::Cycle() {
@@ -28,20 +52,12 @@ void CPU::Cycle() {
     PC+=2;
 
     Decoder::DecodeAndExecute(*this, opcode);
+};
+
+void CPU::UpdateTimers(){
     if(delayTimer>0) delayTimer--;
     if(soundTimer>0) soundTimer--;
-    if(opcode == 0x1228){
-        auto buff=display->GetBuffer();
-        for(int i=0;i<64*32;i++){
-            if(i%64==0){
-                std::cout<<std::endl;
-            }
-            if(buff[i]){
-                std::cout<<"█";
-            }else{
-                std::cout<<" ";
-            }
-        }
-        std::cout<<std::endl;
-    }
-};
+}
+uint8_t CPU::GetSoundTimer(){
+    return soundTimer;
+}

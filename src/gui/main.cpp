@@ -1,32 +1,36 @@
+#include "App.hpp"
 #include <iostream>
-#include "../../include/core/Emulator.hpp"
 
+int main(int argc, char **argv) {
+  App app;
 
-int main() {
-    try {
-        // 1. Tworzymy główną fasadę (to ona alokuje pamięć, procesor itd.)
-        Emulator emu;
-        
-        // 2. Ładujemy ROM (upewnij się, że masz plik w tym miejscu!)
-        std::cout << "Probuje zaladowac ROM...\n";
-        emu.LoadROM("../roms/IBM Logo.ch8");
-        std::cout << "ROM wczytany poprawnie!\n";
-
-        // 3. Pętla testowa: wykonujemy 5 cykli procesora
-        for (int i = 0; i < 21; ++i) {
-            emu.Tick(); // Ta metoda wewnątrz wywołuje cpu->Cycle()
-        }
-        
-        std::cout << "Testowe cykle zakonczone sukcesem. Maszyna zyje.\n";
-        for(int i=0;i<64*32;i++){
-
-        }
-
-    } catch (const std::exception& e) {
-        // Jeśli pliku nie ma, lub jest za duży, ten kod elegancko wypisze Twój wyjątek
-        std::cerr << "Blad krytyczny: " << e.what() << '\n';
-        return 1;
+  std::string romDir = "roms/";
+  std::string startRom = "";
+  for (int i = 1; i < argc; i++) {
+    std::string_view arg = argv[i];
+    if (arg == "-p") {
+      if (i + 1 < argc) {
+        romDir = argv[++i];
+      } else {
+        std::cout << "Nie podano ścieżki" << std::endl;
+      }
+    } else if (arg == "-r") {
+      if (i + 1 < argc) {
+        app.LoadRom(argv[++i]);
+      } else {
+        std::cout << "Nie podano ścieżki" << std::endl;
+      }
+    } else if (arg == "-h") {
+      std::cout << "Użycie: ./chip8 [opcje]" << std::endl
+                << "Opcje:" << std::endl
+                << "  -p <scieżka> Zmienia folder z grami (domyślnie ./roms/)"
+                << std::endl
+                << "  -r <scieżka> Od razu uruchamia wybrany ROM" << std::endl
+                << "  -h wyświetla pomoc" << std::endl;
+      return 0;
     }
-
-    return 0;
+  }
+  app.setRootPath(romDir);
+  app.Run();
+  return 0;
 }

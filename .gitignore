@@ -3,4 +3,5 @@ sources.md
 test.cpp
 roms/
 .build/
+.time
 
