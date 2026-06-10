@@ -90,16 +90,20 @@ void App::Run() {
         } else {
           if (event.type == sf::Event::KeyPressed) {
             switch (event.key.scancode) {
-            case sf::Keyboard::P:
+            case sf::Keyboard::Scan::P:
               if (currentState != EmulatorState::Menu) {
                 currentState = (currentState == EmulatorState::Paused)
                                    ? EmulatorState::Running
                                    : EmulatorState::Paused;
               }
+              break;
             case sf::Keyboard::Scan::Escape:
               currentState = (currentState == EmulatorState::Menu)
                                  ? EmulatorState::Running
                                  : EmulatorState::Menu;
+                break;
+            default:
+                break;
             }
           }
         }
@@ -114,7 +118,7 @@ void App::Run() {
         float posX = 0.0f;
         float posY = 0.0f;
 
-        if (windowRatio < viewRatio) {
+        if (windowRatio >= viewRatio) {
           sizeX = viewRatio / windowRatio;
           posX = (1.0f - sizeX) / 2.0f;
         } else {
